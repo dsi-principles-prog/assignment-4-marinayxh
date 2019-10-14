@@ -16,11 +16,7 @@ A data frame with 20050 observations on 26 variables, each observation is one da
 Here is the official description: this data set was used to train a CrowdFlower AI gender predictor. Contributors were asked to simply view a Twitter profile and judge whether the user was a male, a female, or a brand (non-individual). The dataset contains more than 20,000 rows, each with a user name, a random tweet, account profile and image, location, and even link and sidebar color.
 
 The problem: 
-Here are a few questions we might try to answer with this dataset:
-
-how well do words in tweets and profiles predict user gender?
-what are the words that strongly predict male or female gender?
-how well do stylistic factors (like link color and sidebar color) predict user gender?
+If one person tends to post more, then will this person retweet more?
 
 
 2. Read in and check data
@@ -89,7 +85,7 @@ length(is.na(gender_class$profile_yn_gold) == TRUE)
 ```
 
 ```{r clean the data}
-# Here we try to replace replace unknown with NA under the variable of gender.
+# Here we try to replace replace unknown with NA under the variable of gender, since there is no label called "unknown" based on the description.
 gender_class %>% 
   mutate(gender=ifelse(gender=="unknown",NA,gender))
 ```
@@ -98,8 +94,59 @@ gender_class %>%
 *Note: You may request that score for these sections replace your score for the coding portion of Assignment 3.*
 
 4. Using best practices, write four functions which add engineered features to the dataset, including a description and rationale. Include a test to determine whether the features are working as intended. 
+```{r count the difference between mean and number of count}
+ovr_avg<- function(df, var){
+  df %>% 
+    mutate(ovr_avg = {{var}}-mean({{var}}))
+}
 
+
+gender_class %>% 
+  ovr_avg(tweet_count)
+```
+
+```{r difference between retweet count and the mean}
+retweet_avg<- function(df, var){
+  df %>% 
+    mutate(retweet_avg = {{var}}-mean({{var}}))
+}
+
+
+gender_class %>% 
+  retweet_avg(retweet_count)
+
+```
+
+```{r add daily count for twitter}
+daily_counter <- function(df, var){
+  df %>% 
+    add_count({{var}}, name = "dcount")
+}
+gender_class%>%
+  daily_counter(tweet_count)
+```
+
+
+```{r add gender count for twitter}
+gender_counter <- function(df, var){
+  df %>% 
+    add_count({{var}}, name = "gcount")
+}
+
+gender_class%>%
+  gender_counter(gender)
+```
 
 5. Prepare the data for modeling
 
 Note: this will form the basis for your midterm project. Take advantage of TA's and my office hours. We can provide feedback and guidance. 
+
+```{r check if features work}
+model_tweet <- gender_class%>%
+  ovr_avg(tweet_count)%>%
+  retweet_avg(retweet_count)%>%
+  daily_counter(tweet_count)%>%
+  gender_counter(gender)
+```
+
+
