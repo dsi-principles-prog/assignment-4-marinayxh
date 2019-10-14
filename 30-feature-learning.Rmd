@@ -1,0 +1,105 @@
+---
+title: "30-feature-learning"
+output: html_notebook
+---
+
+
+# Part 2
+
+
+Choose a dataset (this can be the same dataset as the last assignment, or a new one). Define a predictive modeling problem. Create the appropriate files and notebooks to do the following:
+
+1. Describe the data and the problem
+
+Description:
+A data frame with 20050 observations on 26 variables, each observation is one day.
+Here is the official description: this data set was used to train a CrowdFlower AI gender predictor. Contributors were asked to simply view a Twitter profile and judge whether the user was a male, a female, or a brand (non-individual). The dataset contains more than 20,000 rows, each with a user name, a random tweet, account profile and image, location, and even link and sidebar color.
+
+The problem: 
+Here are a few questions we might try to answer with this dataset:
+
+how well do words in tweets and profiles predict user gender?
+what are the words that strongly predict male or female gender?
+how well do stylistic factors (like link color and sidebar color) predict user gender?
+
+
+2. Read in and check data
+```{r data structure}
+str(gender_class)
+head(gender_class)
+dim(gender_class)
+summary(gender_class)
+```
+
+```{r check }
+colnames(gender_class)[1] <- "unit_id"
+colnames(gender_class)[2] <- "golden"
+colnames(gender_class)[3] <- "unit_state"
+colnames(gender_class)[4] <- "trusted_judgments"
+colnames(gender_class)[5] <- "last_judgment_at"
+
+head(gender_class)
+```
+
+```{r check NA}
+for(col in names(gender_class)) {
+  gender_class %>% 
+    assert(not_na, col)
+}
+
+# Output shown that NA exists here for columns.
+```
+
+
+```{r check duplicate in ID}
+length(unique(gender_class$unit_id)) 
+# unique() keeps only unique elements, here the length is 20050 which is the same as we know from the data's description. Therefore, there is no duplicate in ID.
+```
+
+```{r check the data}
+gender_class%>% # check the limit (based on description) for each variable 
+  assert(in_set(c("TRUE", "FALSE")), golden)%>% 
+  assert(in_set(c("finalized", "golden")), unit_state)%>%
+  assert(in_set(c("male", "female","brand")), gender)%>%
+  assert(within_bounds(0,1),`gender:confidence`) %>%
+  assert(within_bounds(0,1),`profile_yn:confidence`)%>%
+  assert(within_bounds(0,Inf),`fav_number`)%>%
+  assert(within_bounds(0,Inf),`retweet_count`)%>%
+  assert(within_bounds(0,Inf),`tweet_count`)
+  
+# According to the description, the variable gender contains one of male, female, or brand (for non-human profiles). However, here it has another type of records as "unknown".
+```
+
+
+
+2. Clean up the data. 
+
+```{r clean the data}
+# 0 in hex value should be having six digits, so here I changed it.
+gender_class%>%
+  mutate(sidebar_color = replace(sidebar_color, sidebar_color == "0", "000000"))
+```
+
+```{r clean the data}
+# value for gender_gold is all NA.
+length(is.na(gender_class$gender_gold) == TRUE)
+# value for profile_yn_gold is all NA. Whether the profile y/n value is golden.
+length(is.na(gender_class$profile_yn_gold) == TRUE)
+# Here, we see that values are all NA for these two variables.
+```
+
+```{r clean the data}
+# Here we try to replace replace unknown with NA under the variable of gender.
+gender_class %>% 
+  mutate(gender=ifelse(gender=="unknown",NA,gender))
+```
+
+
+*Note: You may request that score for these sections replace your score for the coding portion of Assignment 3.*
+
+4. Using best practices, write four functions which add engineered features to the dataset, including a description and rationale. Include a test to determine whether the features are working as intended. 
+
+
+5. Prepare the data for modeling
+
+Note: this will form the basis for your midterm project. Take advantage of TA's and my office hours. We can provide feedback and guidance. 

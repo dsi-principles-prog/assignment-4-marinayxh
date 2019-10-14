@@ -1,0 +1,21 @@
+---
+title: "10-import"
+output: html_notebook
+---
+# Needed Libraries
+
+```{r}
+library(tidyverse)
+library(dplyr)
+library(janitor)
+library(glue)
+library(assertr)
+library(lubridate)
+library(RVerbalExpressions)
+```
+# Import Data
+
+```{r}
+library(readr)
+gender_class<- read_csv("gender-classifier-DFE-791531.csv")
+```
